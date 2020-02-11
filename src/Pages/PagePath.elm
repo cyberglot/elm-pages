@@ -77,6 +77,7 @@ Don't bother using these.
 
 -}
 
+import Url.Builder exposing (relative)
 
 {-| There are only two ways to get a `PagePath`:
 
@@ -114,8 +115,7 @@ toString : PagePath key -> String
 toString path =
     case path of
         Internal rawPath ->
-            "/"
-                ++ (rawPath |> String.join "/")
+            relative rawPath []
 
         External url ->
             url

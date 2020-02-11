@@ -14,7 +14,7 @@ import Pages.Internal.Platform
 import Pages.Manifest exposing (DisplayMode, Orientation)
 import Pages.PagePath exposing (PagePath)
 import Pages.StaticHttp as StaticHttp
-
+import Pages.Internal.Url exposing (CanonicalUrl(..), urlFromValues)
 
 {-| This is the entry point for your `elm-pages` application.
 
@@ -102,7 +102,7 @@ application :
         , fragment : Maybe String
         }
         -> userMsg
-    , canonicalSiteUrl : String
+    , canonicalSiteUrl : CanonicalUrl
     , internals : Pages.Internal.Internal pathKey
     }
     -> Program userModel userMsg metadata view
@@ -124,11 +124,10 @@ application config =
         , generateFiles = config.generateFiles
         , toJsPort = config.internals.toJsPort
         , manifest = config.manifest
-        , canonicalSiteUrl = config.canonicalSiteUrl
+        , canonicalSiteUrl = urlFromValues config.canonicalSiteUrl
         , onPageChange = config.onPageChange
         , pathKey = config.internals.pathKey
         }
-
 
 {-| The `Program` type for an `elm-pages` app.
 -}

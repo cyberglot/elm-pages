@@ -226,7 +226,7 @@ type alias ContentJson =
 
 init :
     pathKey
-    -> String
+    -> Url
     -> Pages.Document.Document metadata view
     -> (Json.Encode.Value -> Cmd Never)
     ->
@@ -352,13 +352,12 @@ init pathKey canonicalSiteUrl document toJsPort viewFn content initUserModel fla
             )
 
 
-encodeHeads : List String -> String -> String -> List (Head.Tag pathKey) -> Json.Encode.Value
+encodeHeads : List String -> Url -> String -> List (Head.Tag pathKey) -> Json.Encode.Value
 encodeHeads allRoutes canonicalSiteUrl currentPagePath head =
     Json.Encode.object
         [ ( "head", Json.Encode.list (Head.toJson canonicalSiteUrl currentPagePath) head )
         , ( "allRoutes", Json.Encode.list Json.Encode.string allRoutes )
         ]
-
 
 type Msg userMsg metadata view
     = AppMsg (AppMsg userMsg metadata view)
@@ -381,7 +380,7 @@ type Model userModel userMsg metadata view
 
 type alias ModelDetails userModel metadata view =
     { key : Browser.Navigation.Key
-    , url : Url.Url
+    , url : Url
     , contentCache : ContentCache metadata view
     , userModel : userModel
     , phase : Phase
@@ -395,7 +394,7 @@ type Phase
 
 update :
     List String
-    -> String
+    -> Url
     ->
         (List ( PagePath pathKey, metadata )
          ->
@@ -569,55 +568,8 @@ type alias Parser metadata view =
     -> Mark.Document view
 
 
-application :
-    { init :
-        Maybe
-            { path : PagePath pathKey
-            , query : Maybe String
-            , fragment : Maybe String
-            }
-        -> ( userModel, Cmd userMsg )
-    , update : userMsg -> userModel -> ( userModel, Cmd userMsg )
-    , subscriptions : userModel -> Sub userMsg
-    , view :
-        List ( PagePath pathKey, metadata )
-        ->
-            { path : PagePath pathKey
-            , frontmatter : metadata
-            }
-        ->
-            StaticHttp.Request
-                { view : userModel -> view -> { title : String, body : Html userMsg }
-                , head : List (Head.Tag pathKey)
-                }
-    , document : Pages.Document.Document metadata view
-    , content : Content
-    , toJsPort : Json.Encode.Value -> Cmd Never
-    , manifest : Manifest.Config pathKey
-    , generateFiles :
-        List
-            { path : PagePath pathKey
-            , frontmatter : metadata
-            , body : String
-            }
-        ->
-            List
-                (Result String
-                    { path : List String
-                    , content : String
-                    }
-                )
-    , canonicalSiteUrl : String
-    , pathKey : pathKey
-    , onPageChange :
-        { path : PagePath pathKey
-        , query : Maybe String
-        , fragment : Maybe String
-        }
-        -> userMsg
-    }
-    --    -> Program userModel userMsg metadata view
-    -> Platform.Program Flags (Model userModel userMsg metadata view) (Msg userMsg metadata view)
+application : Pages.Internal.Platform.Cli.Config pathKey userMsg userModel metadata view
+            -> Platform.Program Flags (Model userModel userMsg metadata view) (Msg userMsg metadata view)
 application config =
     Browser.application
         { init =
@@ -679,54 +631,8 @@ application config =
         }
 
 
-cliApplication :
-    { init :
-        Maybe
-            { path : PagePath pathKey
-            , query : Maybe String
-            , fragment : Maybe String
-            }
-        -> ( userModel, Cmd userMsg )
-    , update : userMsg -> userModel -> ( userModel, Cmd userMsg )
-    , subscriptions : userModel -> Sub userMsg
-    , view :
-        List ( PagePath pathKey, metadata )
-        ->
-            { path : PagePath pathKey
-            , frontmatter : metadata
-            }
-        ->
-            StaticHttp.Request
-                { view : userModel -> view -> { title : String, body : Html userMsg }
-                , head : List (Head.Tag pathKey)
-                }
-    , document : Pages.Document.Document metadata view
-    , content : Content
-    , toJsPort : Json.Encode.Value -> Cmd Never
-    , manifest : Manifest.Config pathKey
-    , generateFiles :
-        List
-            { path : PagePath pathKey
-            , frontmatter : metadata
-            , body : String
-            }
-        ->
-            List
-                (Result String
-                    { path : List String
-                    , content : String
-                    }
-                )
-    , canonicalSiteUrl : String
-    , pathKey : pathKey
-    , onPageChange :
-        { path : PagePath pathKey
-        , query : Maybe String
-        , fragment : Maybe String
-        }
-        -> userMsg
-    }
-    -> Program userModel userMsg metadata view
+cliApplication : Pages.Internal.Platform.Cli.Config pathKey userMsg userModel metadata view
+               -> Program userModel userMsg metadata view
 cliApplication =
     Pages.Internal.Platform.Cli.cliApplication CliMsg
         (\msg ->

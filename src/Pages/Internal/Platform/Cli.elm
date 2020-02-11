@@ -1,5 +1,6 @@
 module Pages.Internal.Platform.Cli exposing
-    ( Content
+    ( Config
+    , Content
     , Effect(..)
     , Flags
     , Model
@@ -34,6 +35,7 @@ import Secrets
 import SecretsDict exposing (SecretsDict)
 import Set exposing (Set)
 import TerminalText as Terminal
+import Url exposing (Url)
 
 
 type ToJsPayload pathKey
@@ -149,7 +151,10 @@ type alias Model =
 
 
 type Msg
-    = GotStaticHttpResponse { request : { masked : RequestDetails, unmasked : RequestDetails }, response : Result Http.Error String }
+    = GotStaticHttpResponse
+        { request : { masked : RequestDetails, unmasked : RequestDetails }
+        , response : Result Http.Error String
+        }
 
 
 type alias Config pathKey userMsg userModel metadata view =
@@ -190,7 +195,7 @@ type alias Config pathKey userMsg userModel metadata view =
                     , content : String
                     }
                 )
-    , canonicalSiteUrl : String
+    , canonicalSiteUrl : Url
     , pathKey : pathKey
     , onPageChange :
         { path : PagePath pathKey

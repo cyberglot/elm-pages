@@ -34,6 +34,7 @@ writing a plugin package to extend `elm-pages`.
 import Json.Encode
 import Pages.ImagePath as ImagePath exposing (ImagePath)
 import Pages.PagePath as PagePath exposing (PagePath)
+import Url exposing (Url, toString)
 
 
 {-| Values that can be passed to the generated `Pages.application` config
@@ -194,31 +195,32 @@ node name attributes =
 {-| Feel free to use this, but in 99% of cases you won't need it. The generated
 code will run this for you to generate your `manifest.json` file automatically!
 -}
-toJson : String -> String -> Tag pathKey -> Json.Encode.Value
+toJson : Url -> String -> Tag pathKey -> Json.Encode.Value
 toJson canonicalSiteUrl currentPagePath (Tag tag) =
-    Json.Encode.object
+    -- workaround because Url is inconsistent with list-building paths
+    let currentPagePath_ = List.singleton currentPagePath
+    in Json.Encode.object
         [ ( "name", Json.Encode.string tag.name )
-        , ( "attributes", Json.Encode.list (encodeProperty canonicalSiteUrl currentPagePath) tag.attributes )
+        , ( "attributes", Json.Encode.list (encodeProperty canonicalSiteUrl currentPagePath_) tag.attributes )
         ]
 
 
-encodeProperty : String -> String -> ( String, AttributeValue pathKey ) -> Json.Encode.Value
+encodeProperty : Url -> List String -> ( String, AttributeValue pathKey ) -> Json.Encode.Value
 encodeProperty canonicalSiteUrl currentPagePath ( name, value ) =
     case value of
         Raw rawValue ->
             Json.Encode.list Json.Encode.string [ name, rawValue ]
 
         FullUrl urlPath ->
-            Json.Encode.list Json.Encode.string [ name, joinPaths canonicalSiteUrl urlPath ]
+            Json.Encode.list Json.Encode.string [ name, joinPaths canonicalSiteUrl [ urlPath ]  ]
 
         FullUrlToCurrentPage ->
             Json.Encode.list Json.Encode.string [ name, joinPaths canonicalSiteUrl currentPagePath ]
 
 
-joinPaths : String -> String -> String
-joinPaths base path =
-    if (base |> String.endsWith "/") && (path |> String.startsWith "/") then
-        base ++ String.dropLeft 1 path
-
-    else
-        base ++ path
+joinPaths : Url -> List String -> String
+joinPaths canonicalSiteUrl currentPagePath =
+    toString canonicalSiteUrl
+        |> List.singleton
+        |> List.append currentPagePath
+        |> String.concat

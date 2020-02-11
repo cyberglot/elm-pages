@@ -14,6 +14,7 @@ import Pages.Manifest as Manifest
 import Pages.PagePath as PagePath
 import Pages.StaticHttp as StaticHttp
 import Pages.StaticHttp.Request as Request
+import Pages.Internal.Url exposing (CanonicalUrl(..), urlFromValues)
 import ProgramTest exposing (ProgramTest)
 import Regex
 import Secrets
@@ -568,7 +569,7 @@ start pages =
             , subscriptions = \_ -> Sub.none
             , document = document
             , content = []
-            , canonicalSiteUrl = ""
+            , canonicalSiteUrl = urlFromValues <| CanonicalUrl "" "" Nothing Nothing
             , pathKey = PathKey
             , onPageChange = \_ -> ()
             }
