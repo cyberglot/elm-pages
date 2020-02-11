@@ -14,6 +14,8 @@ const imageminMozjpeg = require("imagemin-mozjpeg");
 const express = require("express");
 const ClosurePlugin = require("closure-webpack-plugin");
 const readline = require("readline");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
 
 module.exports = { start, run };
 function start({ routes, debug, customPort, manifestConfig, routesWithRequests, filesToGenerate }) {
@@ -252,8 +254,8 @@ function webpackOptions(
           test: /\.scss$/,
           exclude: [/elm-stuff/],
           // see https://github.com/webpack-contrib/css-loader#url
-          loaders: [
-            require.resolve("style-loader"),
+          use: [
+            MiniCssExtractPlugin.loader,
             require.resolve("css-loader"),
             require.resolve("sass-loader")
           ]
@@ -261,15 +263,18 @@ function webpackOptions(
         {
           test: /\.css$/,
           exclude: [/elm-stuff/],
-          loaders: [
-            require.resolve("style-loader"),
-            require.resolve("css-loader")
+          use: [
+              MiniCssExtractPlugin.loader,
+              require.resolve("css-loader")
           ]
         },
         {
-          test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+          test: /\.(ttf|eot|svg|woff(2)?)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
           exclude: [/elm-stuff/, /node_modules/],
-          loader: require.resolve("file-loader")
+          loader: require.resolve("file-loader"),
+          options: {
+              outputPath: "fonts/"
+          }
         }
       ]
     }
@@ -294,6 +299,7 @@ function webpackOptions(
         ]
       },
       plugins: [
+        new MiniCssExtractPlugin(),
         new webpack.ProgressPlugin({
           entries: true,
           modules: true,
@@ -333,6 +339,7 @@ function webpackOptions(
         "./index.js",
         ],
       plugins: [
+        new MiniCssExtractPlugin(),
         new webpack.NamedModulesPlugin(),
         // Prevents compilation errors causing the hot loader to lose state
         new webpack.NoEmitOnErrorsPlugin(),
