@@ -50,6 +50,7 @@ function loadContentAndInitializeApp(/** @type { init: any  } */ mainElmModule) 
       });
       window.allRoutes = fromElm.allRoutes;
       window.fromElm = fromElm;
+      window.renderMathInElement = renderMathInElement.default;
 
       if (navigator.userAgent.indexOf("Headless") >= 0) {
         fromElm.head.forEach(headTag => {
@@ -60,7 +61,6 @@ function loadContentAndInitializeApp(/** @type { init: any  } */ mainElmModule) 
             document.dispatchEvent(new Event("prerender-trigger"));
           }
       } else {
-        renderKatex(document.querySelector('main'));
         setupLinkPrefetching();
       }
     });
@@ -70,8 +70,7 @@ function loadContentAndInitializeApp(/** @type { init: any  } */ mainElmModule) 
   });
 }
 
-function renderKatex (_main) {
-    console.log("<>", _main);
+function renderKatex (_main, renderMathInElement) {
     renderMathInElement(_main, {
         delimiters: [{
             left: "$",
@@ -90,6 +89,7 @@ function renderKatex (_main) {
 };
 
 function setupLinkPrefetching() {
+  renderKatex(document.querySelector('main'), window.renderMathInElement);
   new MutationObserver(observeFirstRender).observe(document.body, {
     attributes: true,
     childList: true,
@@ -133,7 +133,7 @@ function observeUrlChanges(
       mutation.type === "attributes" &&
       mutation.attributeName === "data-url"
     ) {
-
+      renderKatex(document.querySelector('main'), window.renderMathInElement);
       setupLinkPrefetchingHelp();
     }
   }
