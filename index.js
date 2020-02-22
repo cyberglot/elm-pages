@@ -1,4 +1,6 @@
 const elmPagesVersion = require("./package.json").version;
+const katex = require("katex/dist/katex");
+const renderMathInElement = require('katex/contrib/auto-render/auto-render');
 
 let prefetchedPages;
 let initialLocationHash;
@@ -22,7 +24,7 @@ module.exports = function pagesInit(
 
       loadContentAndInitializeApp(mainElmModule).then(resolve, reject);
     });
-  })
+  });
 };
 
 function loadContentAndInitializeApp(/** @type { init: any  } */ mainElmModule) {
@@ -47,7 +49,7 @@ function loadContentAndInitializeApp(/** @type { init: any  } */ mainElmModule) 
         ]
       });
       window.allRoutes = fromElm.allRoutes;
-      
+      window.fromElm = fromElm;
 
       if (navigator.userAgent.indexOf("Headless") >= 0) {
         fromElm.head.forEach(headTag => {
@@ -58,14 +60,34 @@ function loadContentAndInitializeApp(/** @type { init: any  } */ mainElmModule) 
             document.dispatchEvent(new Event("prerender-trigger"));
           }
       } else {
+        renderKatex(document.querySelector('main'));
         setupLinkPrefetching();
       }
     });
 
-    return app
+      return app;
 
   });
 }
+
+function renderKatex (_main) {
+    console.log("<>", _main);
+    renderMathInElement(_main, {
+        delimiters: [{
+            left: "$",
+            right: "$",
+            display: false
+        }, {
+            left: "\\(",
+            right: "\\)",
+            display: false
+        }, {
+            left: "\\[",
+            right: "\\]",
+            display: true
+        }]
+    });
+};
 
 function setupLinkPrefetching() {
   new MutationObserver(observeFirstRender).observe(document.body, {
@@ -111,6 +133,7 @@ function observeUrlChanges(
       mutation.type === "attributes" &&
       mutation.attributeName === "data-url"
     ) {
+
       setupLinkPrefetchingHelp();
     }
   }
@@ -172,9 +195,9 @@ function httpGet(/** @type string */ theUrl) {
     xmlHttp.onreadystatechange = function() {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
             resolve(JSON.parse(xmlHttp.responseText));
-    }
+    };
     xmlHttp.onerror = reject;
     xmlHttp.open("GET", theUrl, true); // true for asynchronous
     xmlHttp.send(null);
-  })
+  });
 }
