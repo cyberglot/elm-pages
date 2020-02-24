@@ -280,6 +280,7 @@ function webpackOptions(
         ]
       },
       plugins: [
+          new MiniCssExtractPlugin(),
         new CompressionPlugin({
           filename: '[path].gz[query]',
           algorithm: 'gzip',
@@ -334,6 +335,7 @@ function webpackOptions(
         "./index.js",
         ],
       plugins: [
+        new MiniCssExtractPlugin(),
         new webpack.NamedModulesPlugin(),
         // Prevents compilation errors causing the hot loader to lose state
         new webpack.NoEmitOnErrorsPlugin(),
