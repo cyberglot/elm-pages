@@ -255,7 +255,7 @@ function webpackOptions(
         {
           test: /\.css$/,
           exclude: [/elm-stuff/],
-            loaders: [
+          use : [
             MiniCssExtractPlugin.loader,
             require.resolve("css-loader")
           ]
