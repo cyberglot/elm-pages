@@ -14,6 +14,9 @@ const imageminMozjpeg = require("imagemin-mozjpeg");
 const express = require("express");
 const ClosurePlugin = require("closure-webpack-plugin");
 const readline = require("readline");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
 
 module.exports = { start, run };
 function start({ routes, debug, customPort, manifestConfig, routesWithRequests, filesToGenerate }) {
@@ -43,12 +46,13 @@ function start({ routes, debug, customPort, manifestConfig, routesWithRequests, 
   app.use(require("webpack-dev-middleware")(compiler, options));
   app.use(require("webpack-hot-middleware")(compiler, {
     log: console.log, path: '/__webpack_hmr'
-  }))
+  }));
 
   app.use("*", function(req, res, next) {
     // don't know why this works, but it does
     // see: https://github.com/jantimon/html-webpack-plugin/issues/145#issuecomment-170554832
     const filename = path.join(compiler.outputPath, "index.html");
+
     compiler.outputFileSystem.readFile(filename, function(err, result) {
       if (err) {
         return next(err);
@@ -56,6 +60,7 @@ function start({ routes, debug, customPort, manifestConfig, routesWithRequests, 
       res.set("content-type", "text/html");
       res.send(result);
       res.end();
+      return result;
     });
   });
 
@@ -157,7 +162,6 @@ function webpackOptions(
           })
         ]
       }),
-
       new HTMLWebpackPlugin({
         inject: "head",
         template: path.resolve(__dirname, "template.html")
@@ -249,20 +253,10 @@ function webpackOptions(
           }
         },
         {
-          test: /\.scss$/,
-          exclude: [/elm-stuff/],
-          // see https://github.com/webpack-contrib/css-loader#url
-          loaders: [
-            require.resolve("style-loader"),
-            require.resolve("css-loader"),
-            require.resolve("sass-loader")
-          ]
-        },
-        {
           test: /\.css$/,
           exclude: [/elm-stuff/],
-          loaders: [
-            require.resolve("style-loader"),
+            loaders: [
+            MiniCssExtractPlugin.loader,
             require.resolve("css-loader")
           ]
         },
@@ -279,21 +273,28 @@ function webpackOptions(
       entry: "./index.js",
       optimization: {
         minimizer: [
-          new ClosurePlugin(
-            { mode: "STANDARD" },
-            {
-              // compiler flags here
-              //
-              // for debuging help, try these:
-              //
-              // formatting: 'PRETTY_PRINT'
-              // debug: true,
-              // renaming: false
-            }
-          )
+            new ClosurePlugin({ mode: "STANDARD" }, {}),
+            new UglifyJsPlugin({
+                test: /\.js(\?.*)?$/i,
+            })
         ]
       },
       plugins: [
+        new CompressionPlugin({
+          filename: '[path].gz[query]',
+          algorithm: 'gzip',
+          test: /\.js$|\.css$|\.html$/,
+          threshold: 10240,
+          minRatio: 0.8,
+        }),
+        new CompressionPlugin({
+          filename: '[path].br[query]',
+          algorithm: 'brotliCompress',
+          test: /\.(js|css|html|svg)$/,
+          compressionOptions: { level: 11 },
+          threshold: 10240,
+          minRatio: 0.8,
+        }),
         new webpack.ProgressPlugin({
           entries: true,
           modules: true,
