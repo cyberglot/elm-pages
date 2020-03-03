@@ -89,7 +89,6 @@ function renderKatex (_main, renderMathInElement) {
 };
 
 function setupLinkPrefetching() {
-  renderKatex(document.querySelector('main'), window.renderMathInElement);
   new MutationObserver(observeFirstRender).observe(document.body, {
     attributes: true,
     childList: true,
