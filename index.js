@@ -118,6 +118,7 @@ function observeFirstRender(
     }
   }
   firstRenderObserver.disconnect();
+  renderKatex(document.querySelector('main'), window.renderMathInElement);
   new MutationObserver(observeUrlChanges).observe(document.body.children[0], {
     attributes: true,
     childList: false,
@@ -134,7 +135,6 @@ function observeUrlChanges(
       mutation.type === "attributes" &&
       mutation.attributeName === "data-url"
     ) {
-      renderKatex(document.querySelector('main'), window.renderMathInElement);
       setupLinkPrefetchingHelp();
     }
   }
